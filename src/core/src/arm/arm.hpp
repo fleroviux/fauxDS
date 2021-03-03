@@ -6,6 +6,8 @@
 
 #include <array>
 #include <util/log.hpp>
+#include <fstream>
+#include <vector>
 
 #include "coprocessor.hpp"
 #include "state.hpp"
@@ -80,6 +82,14 @@ private:
   u32 opcode[2];
 
   bool condition_table[16][16];
+
+  struct Trace {
+    u32 r14;
+    u32 r15;
+  };
+
+  std::vector<Trace> r14_trace;
+  u32 r14_old = 0xFFFFFFFF;
   
   static std::array<Handler16, 2048> s_opcode_lut_16;
   static std::array<Handler32, 8192> s_opcode_lut_32;

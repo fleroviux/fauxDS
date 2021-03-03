@@ -4,6 +4,7 @@
 
 #include <util/log.hpp>
 #include <string.h>
+#include <fstream>
 
 #include "dma9.hpp"
 
@@ -159,8 +160,18 @@ void DMA9::RunChannel(Channel& channel) {
   int dst_offset = dma_modify[channel.size][channel.dst_mode];
   int src_offset = dma_modify[channel.size][channel.src_mode];
 
-  LOG_INFO("DMA9: transfer src=0x{0:08X} dst=0x{1:08X} length=0x{2:08X} size={3} time={4}",
-    channel.latch.src, channel.latch.dst, channel.latch.length, channel.size, channel.time);
+  LOG_INFO("DMA9: transfer src=0x{0:08X} dst=0x{1:08X} length=0x{2:08X} size={3} time={4} r14=0x{5:08X} r15=0x{6:08X}",
+    channel.latch.src, channel.latch.dst, channel.latch.length, channel.size, channel.time, memory->r14, memory->r15);
+
+  // if (memory->r15 == 0x01FF84BC) {
+  //   // dump current ITCM contents
+  //   std::ofstream file { "itcm_dump.bin", std::ios::out | std::ios::binary };
+  //   for (u32 addr = 0; addr < 0x8000; addr++) {
+  //     u8 data = memory->ReadByte(addr, Bus::Data);
+  //     file.write((char*)&data, 1);
+  //   }
+  //   file.close();
+  // }
 
   // TODO: this an absolutely atrocious hack.
   // Rework DMA so we don't need iffy workarounds like this.

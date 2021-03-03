@@ -8,7 +8,7 @@
 
 namespace Duality::core {
 
-IRQ::IRQ() {
+IRQ::IRQ(bool arm9) : arm9(arm9) {
   Reset();
 }
 
@@ -39,6 +39,9 @@ bool IRQ::HasPendingIRQ() {
 void IRQ::UpdateIRQLine() {
   if (core != nullptr) {
     core->IRQLine() = IsEnabled() && HasPendingIRQ();
+    if (arm9) {
+      LOG_DEBUG("DBG: IE=0x{0:08X} IF=0x{1:08X}", ie.value, _if.value);
+    }
   }
 }
 

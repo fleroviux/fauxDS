@@ -34,7 +34,7 @@ struct GPU {
     }
     auto row = (offset >> 2) & 3;
     auto col =  offset >> 4;
-    return static_cast<T>(clip_matrix[col][row].raw() >> ((offset & 3) * 8));
+   return static_cast<T>(clip_matrix[col][row].raw() >> ((offset & 3) * 8));
   }
 
   void Render();

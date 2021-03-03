@@ -12,6 +12,8 @@
 #include <util/punning.hpp>
 #include <memory>
 
+#include <util/log.hpp>
+
 namespace Duality::core::arm {
 
 /** Base class that memory systems must implement
@@ -41,6 +43,10 @@ struct MemoryBase {
     static_assert(common::is_one_of_v<T, u8, u16, u32, u64>);
 
     address &= ~(sizeof(T) - 1);
+
+    if (address >= dawn_addr && address < (dawn_addr + 0x3438)) {
+      LOG_DEBUG("DBG: read dawn[{0}] = 0x{1:08X}, r14=0x{2:08X} r15=0x{3:08X}", address - dawn_addr, ReadWord(address, Bus::Data), r14, r15);
+    }
 
     if constexpr (gEnableFastMemory && bus != Bus::System) {
       if (itcm.config.enable_read &&
@@ -75,10 +81,36 @@ struct MemoryBase {
 
     address &= ~(sizeof(T) - 1);
 
+    // auto a = ReadWord(0x020cd1ac, Bus::Data) + 0x20;
+    // //auto b = ReadWord(a, Bus::Data);
+    // if (address == a) {
+    //   LOG_DEBUG("DBG: write to target pointer 0x{0:08X}=0x{1:08X}  r14=0x{2:08X} r15=0x{3:08X}", a, value, r14, r15);
+    // }
+
+    // if constexpr (std::is_same_v<T, u32>) {
+    //   if (param1 != 0xFFFFFFFF && address == (param1 + 0x30)) {
+    //     LOG_DEBUG("DBG: set *(0x{0:08X} + 0x30) = 0x{1:08X}, r14=0x{2:08X} r15=0x{3:08X}", param1, value, r14, r15);
+    //   }
+    // }
+
+    if (address >= dawn_addr && address < (dawn_addr + 0x3438)) {
+      LOG_DEBUG("DBG: write dawn[{0}] = 0x{1:08X}", address - dawn_addr, value);
+    }
+
+    if ((address >> 24) == 0x06) {
+      LOG_DEBUG("DBG: VRAM write 0x{0:08X} = 0x{1:08X}, r14=0x{2:08X}, r15=0x{3:08X}", address, value, r14, r15);
+    }
+
+
     if constexpr (gEnableFastMemory && bus != Bus::System) {
       if (itcm.config.enable &&
           address >= itcm.config.base &&
           address <= itcm.config.limit) {
+        if constexpr (std::is_same_v<T, u32>) {
+          // if (value == 0x30585442) {  // BTX0
+          //   LOG_DEBUG("DBG: wrote 'BTX0' to ITCM r14=0x{0:08X} r15=0x{1:08X}", r14, r15);
+          // }
+        }
         write<T>(itcm.data, (address - itcm.config.base) & itcm.mask, value);
         return;
       }
@@ -121,6 +153,11 @@ struct MemoryBase {
       u32 limit = 0;
     } config;
   } itcm, dtcm;
+
+  u32 r14 = 0xDEADBEEF;
+  u32 r15 = 0xDEADBEEF;
+  u32 param1 = 0xFFFFFFFF;
+  u32 dawn_addr = 0xFFFFFFFF;
 };
 
 } // namespace Duality::core::arm

@@ -32,7 +32,7 @@ struct IRQ {
     SPI = 1 << 23
   };
 
-  IRQ();
+  IRQ(bool arm9);
 
   void Reset();
   void SetCore(arm::ARM& core) { this->core = &core; UpdateIRQLine(); }
@@ -57,7 +57,7 @@ struct IRQ {
     auto ReadByte (uint offset) -> u8;
     void WriteByte(uint offset, u8 value);
 
-  private:
+  //private:
     friend struct Duality::core::IRQ;
 
     u32 value = 0;
@@ -69,7 +69,7 @@ struct IRQ {
     auto ReadByte (uint offset) -> u8;
     void WriteByte(uint offset, u8 value);
 
-  private:
+  //private:
     friend struct Duality::core::IRQ;
 
     u32 value = 0;
@@ -80,6 +80,7 @@ private:
   void UpdateIRQLine();
 
   arm::ARM* core = nullptr;
+  bool arm9;
 };
 
 } // namespace Duality::core

@@ -61,6 +61,8 @@ struct CoreImpl {
 
     auto frame_target = scheduler.GetTimestampNow() + cycles - overshoot;
 
+    LOG_INFO("ARM9 IRQ: IME={0} IE=0x{1:08X} IF=0x{2:08X}", irq9.IsEnabled(), irq9.ie.value, irq9._if.value);
+
     while (scheduler.GetTimestampNow() < frame_target) {
       uint cycles = 1;
 

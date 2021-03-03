@@ -29,6 +29,8 @@ namespace Duality::core {
 struct Interconnect {
   Interconnect()
       : apu(scheduler)
+      , irq7(false)
+      , irq9(true)
       , cart(irq7, irq9, dma7, dma9) 
       , ipc(irq7, irq9)
       , spi(irq7)

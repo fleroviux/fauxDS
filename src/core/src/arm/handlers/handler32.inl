@@ -472,9 +472,9 @@ void ARM_HalfDoubleAndSignedTransfer(u32 instruction) {
       if constexpr (load) {
         state.reg[dst] = ReadByteSigned(address);
       } else if (arch == Architecture::ARMv5TE) {
-        ASSERT((dst & 1) == 0, "ARM: LDRD: using an odd numbered destination register is undefined.");
-        ASSERT(dst != 14, "ARM: LDRD: loading r14 and r15 is unpredictable.");
-        ASSERT(!writeback || (dst != base && (dst + 1) != base), "ARM: LDRD: using the base register as a destination is unpredictable");
+        ASSERT((dst & 1) == 0, "ARM: LDRD: using an odd numbered destination register is undefined. r14=0x{0:08X} r15=0x{1:08X}", state.r14, state.r15);
+        ASSERT(dst != 14, "ARM: LDRD: loading r14 and r15 is unpredictable. r14=0x{0:08X} r15=0x{1:08X}", state.r14, state.r15);
+        ASSERT(!writeback || (dst != base && (dst + 1) != base), "ARM: LDRD: using the base register as a destination is unpredictable r14=0x{0:08X} r15=0x{1:08X}", state.r14, state.r15);
 
         state.reg[dst + 0] = ReadWord(address + 0);
         state.reg[dst + 1] = ReadWord(address + 4);
@@ -485,7 +485,18 @@ void ARM_HalfDoubleAndSignedTransfer(u32 instruction) {
       if constexpr (load) {
         state.reg[dst] = ReadHalfSigned(address);
       } else if (arch == Architecture::ARMv5TE) {
-        ASSERT((dst & 1) == 0, "ARM: STRD: using an odd numbered destination register is undefined.");
+        if (dst & 1) {
+          std::ofstream file{"itcm.bin", std::ios::out | std::ios::binary};
+          auto size = memory->itcm.mask + 1;
+          for (uint i = 0; i < size; i++) {
+            u8 data = memory->itcm.data[i];
+            file.write((char*)&data, 1);
+          }
+          file.close();
+          LOG_DEBUG("DBG: IRQ handler address = 0x{0:08X}", memory->FastRead<u32, Bus::Data>(memory->dtcm.config.base + 0x3FFC));
+        }
+
+        ASSERT((dst & 1) == 0, "ARM: STRD: using an odd numbered destination register is undefined. r14=0x{0:08X} r15=0x{1:08X}", state.r14, state.r15);
 
         WriteWord(address + 0, state.reg[dst + 0]);
         WriteWord(address + 4, state.reg[dst + 1]);
